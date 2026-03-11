@@ -59,6 +59,23 @@ function M.attach()
 	vim.wo[left_win].scrollbind = true
 	vim.wo[right_win].scrollbind = true
 
+	-- command to focus codediff
+	vim.api.nvim_create_user_command("UndoDiffFocusDiff", function()
+		if vim.api.nvim_win_is_valid(left_win) then
+			vim.api.nvim_set_current_win(left_win)
+		end
+	end, { desc = "Focus the UndoDiff split view" })
+
+	-- command to focus undotree
+	vim.api.nvim_create_user_command("UndoDiffFocusTree", function()
+		for _, win in ipairs(vim.api.nvim_list_wins()) do
+			if vim.api.nvim_win_get_buf(win) == tree_buf then
+				vim.api.nvim_set_current_win(win)
+				return
+			end
+		end
+	end, { desc = "Focus the UndoDiff undo tree" })
+
 	-- render with codediff
 	local diff = require("codediff.core.diff")
 	local core = require("codediff.ui.core")
@@ -87,13 +104,13 @@ function M.attach()
 			return
 		end
 		cleaned_up = true
-		-- close all windows
+		-- Close all windows
 		for _, w in ipairs(all_wins) do
 			if w and vim.api.nvim_win_is_valid(w) then
 				vim.api.nvim_win_close(w, true)
 			end
 		end
-		-- delete all buffers
+		-- Delete all buffers
 		for _, b in ipairs(all_bufs) do
 			if b and vim.api.nvim_buf_is_valid(b) then
 				pcall(vim.api.nvim_buf_delete, b, { force = true })
@@ -111,12 +128,11 @@ function M.attach()
 	})
 
 	-- when user closes one of the windows
-	local float_wins = { left_win, sep_win, right_win }
 	vim.api.nvim_create_autocmd("WinClosed", {
 		callback = function(ev)
 			local closed_win = tonumber(ev.match)
-			for _, w in ipairs(float_wins) do
-				if closed_win == w then -- verify that the closed window is from this plugin
+			for _, w in ipairs(all_wins) do
+				if w == closed_win then
 					cleanup()
 					return
 				end

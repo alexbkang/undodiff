@@ -83,7 +83,7 @@ function M.attach()
 	})
 
 	require("codediff").setup({})
-	require("undodiff.render").setup(tree_buf, curr_buf, old_buf, new_buf, old_lines)
+	require("undodiff.render").setup(tree_buf, curr_buf, old_buf, new_buf, old_lines, new_win)
 	vim.api.nvim_win_set_buf(old_win, old_buf)
 	vim.api.nvim_win_set_buf(new_win, new_buf)
 
@@ -106,10 +106,12 @@ function M.attach()
 
 	vim.keymap.set("n", M.opts.diff_scroll_down, function()
 		vim.api.nvim_win_call(new_win, function() vim.cmd("normal! \x04") end)
+		vim.api.nvim_win_call(new_win, function() vim.cmd("syncbind") end)
 	end, { buffer = tree_buf, desc = "UndoDiff: scroll diff down" })
 
 	vim.keymap.set("n", M.opts.diff_scroll_up, function()
 		vim.api.nvim_win_call(new_win, function() vim.cmd("normal! \x15") end)
+		vim.api.nvim_win_call(new_win, function() vim.cmd("syncbind") end)
 	end, { buffer = tree_buf, desc = "UndoDiff: scroll diff up" })
 
 	vim.api.nvim_set_current_win(tree_win)

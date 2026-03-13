@@ -34,7 +34,7 @@ function M.attach()
 	vim.wo[tree_win].winhighlight = "Normal:UndoDiffTree"
 
 	vim.api.nvim_set_current_win(old_win)
-	vim.cmd("vsplit")
+	vim.cmd("rightbelow vsplit")
 	local new_win = vim.api.nvim_get_current_win()
 	local new_buf = vim.api.nvim_create_buf(false, true)
 

@@ -6,6 +6,8 @@ function M.setup(opts)
 		treesitter = true,
 		number = true,
 		signcolumn = "no",
+		diff_scroll_down = "<C-d>",
+		diff_scroll_up = "<C-u>",
 	}, opts or {})
 	vim.api.nvim_create_user_command("UndoDiff", function()
 		M.attach()
@@ -97,6 +99,18 @@ function M.attach()
 		state.confirmed = true
 		vim.api.nvim_win_close(tree_win, true)
 	end, { buffer = tree_buf, desc = "UndoDiff: confirm and close" })
+
+	vim.keymap.set("n", "q", function()
+		vim.api.nvim_win_close(tree_win, true)
+	end, { buffer = tree_buf, desc = "UndoDiff: cancel and close" })
+
+	vim.keymap.set("n", M.opts.diff_scroll_down, function()
+		vim.api.nvim_win_call(new_win, function() vim.cmd("normal! \x04") end)
+	end, { buffer = tree_buf, desc = "UndoDiff: scroll diff down" })
+
+	vim.keymap.set("n", M.opts.diff_scroll_up, function()
+		vim.api.nvim_win_call(new_win, function() vim.cmd("normal! \x15") end)
+	end, { buffer = tree_buf, desc = "UndoDiff: scroll diff up" })
 
 	vim.api.nvim_set_current_win(tree_win)
 end

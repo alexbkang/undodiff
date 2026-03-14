@@ -79,37 +79,14 @@ function M.open(opts)
 	end
 	vim.wo[old_win].scrollbind = true
 	vim.wo[new_win].scrollbind = true
+	vim.wo[old_win].cursorbind = true
+	vim.wo[new_win].cursorbind = true
 	for _, win in ipairs({ old_win, new_win }) do
 		vim.wo[win].number = opts.number
 		vim.wo[win].relativenumber = opts.relativenumber
 		vim.wo[win].signcolumn = opts.signcolumn
 		vim.wo[win].winhighlight = "Normal:UndoDiffView"
 	end
-
-	local function sync_cursor(from_win, to_win)
-		local cursor = vim.api.nvim_win_get_cursor(from_win)
-		if vim.api.nvim_win_is_valid(to_win) then
-			local to_buf = vim.api.nvim_win_get_buf(to_win)
-			local line_count = vim.api.nvim_buf_line_count(to_buf)
-			local row = math.min(cursor[1], line_count)
-			local line = vim.api.nvim_buf_get_lines(to_buf, row - 1, row, false)[1] or ""
-			local col = math.min(cursor[2], #line)
-			vim.api.nvim_win_set_cursor(to_win, { row, col })
-		end
-	end
-
-	vim.api.nvim_create_autocmd("CursorMoved", {
-		buffer = old_buf,
-		callback = function()
-			sync_cursor(old_win, new_win)
-		end,
-	})
-	vim.api.nvim_create_autocmd("CursorMoved", {
-		buffer = new_buf,
-		callback = function()
-			sync_cursor(new_win, old_win)
-		end,
-	})
 
 	require("codediff").setup({})
 	require("undodiff.render").setup(tree_buf, curr_buf, old_buf, new_buf, old_lines, new_win)
@@ -142,7 +119,6 @@ function M.open(opts)
 		vim.api.nvim_win_call(new_win, function()
 			vim.cmd("syncbind")
 		end)
-		sync_cursor(new_win, old_win)
 	end, { buffer = tree_buf, desc = "UndoDiff: scroll diff down" })
 
 	vim.keymap.set("n", opts.diff_scroll_up, function()
@@ -152,7 +128,6 @@ function M.open(opts)
 		vim.api.nvim_win_call(new_win, function()
 			vim.cmd("syncbind")
 		end)
-		sync_cursor(new_win, old_win)
 	end, { buffer = tree_buf, desc = "UndoDiff: scroll diff up" })
 
 	vim.api.nvim_set_current_win(tree_win)

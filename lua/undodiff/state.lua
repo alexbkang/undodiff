@@ -1,6 +1,5 @@
 local M = {}
 
--- nil when no session is active; table of session fields when active
 M.session = nil
 
 function M.is_active(bufnr)

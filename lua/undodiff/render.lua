@@ -12,7 +12,9 @@ function M.setup(tree_buf, curr_buf, old_buf, new_buf, old_lines, new_win)
 			vim.api.nvim_buf_set_lines(new_buf, 0, -1, false, new_lines)
 			core.render_diff(old_buf, new_buf, old_lines, new_lines, diff.compute_diff(old_lines, new_lines))
 			vim.bo[new_buf].modifiable = false
-			vim.api.nvim_win_call(new_win, function() vim.cmd("syncbind") end)
+			vim.api.nvim_win_call(new_win, function()
+				vim.cmd("syncbind")
+			end)
 		end,
 	})
 end

@@ -86,26 +86,6 @@ function M.open(opts)
 		vim.wo[win].winhighlight = "Normal:UndoDiffView"
 	end
 
-	local function sync_cursor(from_win, to_win)
-		local cursor = vim.api.nvim_win_get_cursor(from_win)
-		if vim.api.nvim_win_is_valid(to_win) then
-			vim.api.nvim_win_set_cursor(to_win, cursor)
-		end
-	end
-
-	vim.api.nvim_create_autocmd("CursorMoved", {
-		buffer = old_buf,
-		callback = function()
-			sync_cursor(old_win, new_win)
-		end,
-	})
-	vim.api.nvim_create_autocmd("CursorMoved", {
-		buffer = new_buf,
-		callback = function()
-			sync_cursor(new_win, old_win)
-		end,
-	})
-
 	require("codediff").setup({})
 	require("undodiff.render").setup(tree_buf, curr_buf, old_buf, new_buf, old_lines, new_win)
 	vim.api.nvim_win_set_buf(old_win, old_buf)

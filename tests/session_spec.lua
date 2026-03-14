@@ -128,9 +128,7 @@ describe("session.open", function()
 	after_each(reset_state)
 
 	if not has_codediff or not has_undotree then
-		it("skipped: codediff or nvim.undotree not available", function()
-			assert.is_true(false)
-		end)
+		pending("codediff or nvim.undotree not available, failing test")
 		return
 	end
 

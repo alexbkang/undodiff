@@ -1,0 +1,27 @@
+local state = require("undodiff.state")
+
+describe("state", function()
+	before_each(function()
+		state.session = nil
+	end)
+
+	describe("is_active", function()
+		it("returns nil for a fresh buffer", function()
+			local buf = vim.api.nvim_create_buf(false, true)
+			assert.is_nil(state.is_active(buf))
+			vim.api.nvim_buf_delete(buf, { force = true })
+		end)
+	end)
+
+	describe("set_active", function()
+		it("marks all buffers in the list", function()
+			local buf1 = vim.api.nvim_create_buf(false, true)
+			local buf2 = vim.api.nvim_create_buf(false, true)
+			state.set_active({ buf1, buf2 })
+			assert.is_true(state.is_active(buf1))
+			assert.is_true(state.is_active(buf2))
+			vim.api.nvim_buf_delete(buf1, { force = true })
+			vim.api.nvim_buf_delete(buf2, { force = true })
+		end)
+	end)
+end)

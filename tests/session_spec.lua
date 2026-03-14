@@ -116,7 +116,9 @@ describe("session.close", function()
 end)
 
 local has_codediff = pcall(require, "codediff")
-local has_undotree = pcall(vim.cmd, "packadd nvim.undotree")
+local has_undotree = pcall(function()
+	vim.cmd("packadd nvim.undotree")
+end)
 
 describe("session.open", function()
 	before_each(function()
@@ -127,7 +129,7 @@ describe("session.open", function()
 
 	if not has_codediff or not has_undotree then
 		it("skipped: codediff or nvim.undotree not available", function()
-			assert.is_true(true)
+			assert.is_true(false)
 		end)
 		return
 	end
@@ -137,13 +139,13 @@ describe("session.open", function()
 		vim.api.nvim_set_current_buf(buf)
 		session.open(require("undodiff").opts)
 		local s = state.session
-		assert.is_not_nil(s)
-		assert.is_not_nil(s.curr_buf)
-		assert.is_not_nil(s.tree_win)
-		assert.is_not_nil(s.scratch_win)
-		assert.is_not_nil(s.old_win)
+		assert.not_nil(s)
+		assert.not_nil(s.curr_buf)
+		assert.not_nil(s.tree_win)
+		assert.not_nil(s.scratch_win)
+		assert.not_nil(s.old_win)
 		assert.is_false(s.confirmed)
-		assert.is_not_nil(s.original_seq)
+		assert.not_nil(s.original_seq)
 	end)
 
 	it("marks scratch buffers as active", function()
@@ -159,7 +161,6 @@ describe("session.open", function()
 		local buf = vim.api.nvim_create_buf(false, false)
 		vim.api.nvim_set_current_buf(buf)
 		session.open(require("undodiff").opts)
-		-- after open, user is in tree_win which holds an active buffer
 		vim.api.nvim_set_current_win(state.session.tree_win)
 		session.open(require("undodiff").opts)
 		assert.is_nil(state.session)

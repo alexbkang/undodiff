@@ -7,8 +7,8 @@ function M.setup(opts)
 		number = true,
 		relativenumber = false,
 		signcolumn = "no",
-		diff_scroll_down = "<C-d>",
-		diff_scroll_up = "<C-u>",
+		next_hunk = "]c",
+		prev_hunk = "[c",
 	}, opts or {})
 	vim.api.nvim_create_user_command("UndoDiff", function()
 		session.open(M.opts)

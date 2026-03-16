@@ -69,18 +69,14 @@ function M.open(opts)
 	}
 	state.set_active(state.session.buffers)
 
-	vim.b[new_buf].lsp_disable = true
-	vim.b[old_buf].lsp_disable = true
-	vim.bo[new_buf].filetype = ft
-	vim.bo[old_buf].filetype = ft
-	if not opts.treesitter then
-		vim.treesitter.stop(new_buf)
-		vim.treesitter.stop(old_buf)
+	if opts.treesitter then
+		local lang = vim.treesitter.language.get_lang(ft) or ft
+		for _, buf in ipairs({ old_buf, new_buf }) do
+			if not pcall(vim.treesitter.start, buf, lang) then
+				vim.bo[buf].syntax = ft
+			end
+		end
 	end
-	vim.wo[old_win].scrollbind = true
-	vim.wo[new_win].scrollbind = true
-	vim.wo[old_win].cursorbind = true
-	vim.wo[new_win].cursorbind = true
 	for _, win in ipairs({ old_win, new_win }) do
 		vim.wo[win].number = opts.number
 		vim.wo[win].relativenumber = opts.relativenumber
@@ -89,9 +85,9 @@ function M.open(opts)
 	end
 
 	require("codediff").setup({})
-	require("undodiff.render").setup(tree_buf, curr_buf, old_buf, new_buf, old_lines, new_win)
 	vim.api.nvim_win_set_buf(old_win, old_buf)
 	vim.api.nvim_win_set_buf(new_win, new_buf)
+	require("undodiff.render").setup(tree_buf, curr_buf, old_buf, new_buf, old_lines, old_win, new_win, tree_win)
 
 	vim.api.nvim_create_autocmd("WinClosed", {
 		pattern = tostring(tree_win),
@@ -112,23 +108,44 @@ function M.open(opts)
 		vim.api.nvim_win_close(tree_win, true)
 	end, { buffer = tree_buf, desc = "UndoDiff: cancel and close" })
 
-	vim.keymap.set("n", opts.diff_scroll_down, function()
+	local function jump(target)
+		pcall(vim.api.nvim_win_set_cursor, new_win, { target, 0 })
 		vim.api.nvim_win_call(new_win, function()
-			vim.cmd("normal! \x04")
+			vim.cmd("normal! zz")
 		end)
-		vim.api.nvim_win_call(new_win, function()
-			vim.cmd("syncbind")
-		end)
-	end, { buffer = tree_buf, desc = "UndoDiff: scroll diff down" })
+	end
 
-	vim.keymap.set("n", opts.diff_scroll_up, function()
-		vim.api.nvim_win_call(new_win, function()
-			vim.cmd("normal! \x15")
-		end)
-		vim.api.nvim_win_call(new_win, function()
-			vim.cmd("syncbind")
-		end)
-	end, { buffer = tree_buf, desc = "UndoDiff: scroll diff up" })
+	vim.keymap.set("n", opts.next_hunk, function()
+		local s = state.session
+		if not s or not s.diff_result or not s.diff_result.changes or #s.diff_result.changes == 0 then
+			return
+		end
+		local changes = s.diff_result.changes
+		local current_line = vim.api.nvim_win_get_cursor(new_win)[1]
+		for _, change in ipairs(changes) do
+			if change.modified.start_line > current_line then
+				jump(change.modified.start_line)
+				return
+			end
+		end
+		jump(changes[1].modified.start_line)
+	end, { buffer = tree_buf, desc = "UndoDiff: next hunk" })
+
+	vim.keymap.set("n", opts.prev_hunk, function()
+		local s = state.session
+		if not s or not s.diff_result or not s.diff_result.changes or #s.diff_result.changes == 0 then
+			return
+		end
+		local changes = s.diff_result.changes
+		local current_line = vim.api.nvim_win_get_cursor(new_win)[1]
+		for i = #changes, 1, -1 do
+			if changes[i].modified.start_line < current_line then
+				jump(changes[i].modified.start_line)
+				return
+			end
+		end
+		jump(changes[#changes].modified.start_line)
+	end, { buffer = tree_buf, desc = "UndoDiff: prev hunk" })
 
 	vim.api.nvim_set_current_win(tree_win)
 end

@@ -53,10 +53,12 @@ function M.open(opts)
 	local new_win = vim.api.nvim_get_current_win()
 	local new_buf = vim.api.nvim_create_buf(false, true)
 	vim.bo[new_buf].bufhidden = "wipe"
+	vim.bo[new_buf].modifiable = false
 
 	local old_buf = vim.api.nvim_create_buf(false, true)
 	vim.bo[old_buf].bufhidden = "wipe"
 	vim.api.nvim_buf_set_lines(old_buf, 0, -1, false, old_lines)
+	vim.bo[old_buf].modifiable = false
 
 	state.session = {
 		buffers = { tree_buf, new_buf, old_buf },

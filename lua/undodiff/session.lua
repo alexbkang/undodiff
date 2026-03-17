@@ -79,6 +79,7 @@ function M.open(opts)
 			end
 		end
 	end
+  
 	for _, win in ipairs({ old_win, new_win }) do
 		vim.wo[win].number = opts.number
 		vim.wo[win].relativenumber = opts.relativenumber
